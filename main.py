@@ -1,3 +1,4 @@
+from flask import Flask, request, jsonify
 import pandas as pd
 import os
 from nltk.tokenize import word_tokenize
@@ -5,6 +6,8 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+app = Flask(__name__)
 
 # Load data from CSV file
 def load_data(file_path, num_rows=500):
@@ -55,10 +58,10 @@ def vector_based_retrieval(query, processed_data):
     similarity_scores = cosine_similarity(query_vector, tfidf_matrix).flatten()
     return similarity_scores
 
-# Main function
-def main():
-    file_path = os.path.dirname(os.path.realpath(__file__)) + "/dataset/"
-    file_path = file_path + "test.csv"
+@app.route('/search', methods=['POST'])
+def search():
+    data_path = os.path.dirname(os.path.realpath(__file__)) + "/dataset/"
+    file_path = data_path + "test.csv"
     num_rows = 500
 
     # Load data
@@ -70,25 +73,22 @@ def main():
     # Indexing
     index = create_index(processed_data)
 
-    # User query
-    user_query = input("Enter your search query: ")
+    # Get query from the request
+    user_query = request.json['query']
 
     # Stemming on the query
     user_query = " ".join([PorterStemmer().stem(word) for word in word_tokenize(user_query.lower())])
 
     # Boolean Retrieval
-    boolean_results = boolean_retrieval(user_query, index, processed_data)
+    boolean_results = list(boolean_retrieval(user_query, index, processed_data))
 
     # Vector-based Retrieval using TF-IDF
     tfidf_scores = vector_based_retrieval(user_query, processed_data)
 
-    # Display results
-    print("\nBoolean Retrieval Results:")
-    print(boolean_results)
+    # Combine results and scores
+    results = [{"document": data[i], "score": tfidf_scores[i]} for i in boolean_results]
 
-    print("\nTF-IDF Scores:")
-    for i, score in enumerate(tfidf_scores):
-        print(f"Document {i+1}: {score}")
+    return jsonify(results)
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(debug=True)
