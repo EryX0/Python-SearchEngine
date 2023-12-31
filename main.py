@@ -95,11 +95,12 @@ def search():
             "id": data[i]['id'],
             "document_number": i + 1,  # Add 1 to start counting from 1
             "highlights": data[i]['highlights'],
-            "score": tfidf_scores[i]
+            "score": tfidf_scores[i],
+            "article": data[i]['article']
         }
         for i in boolean_results
     ]
     return jsonify(results)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
