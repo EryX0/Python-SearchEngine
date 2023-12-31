@@ -1,5 +1,4 @@
-Flask
-flask-cors
-pandas
-scikit-learn
-nltk
+Flask==3.0.0
+pandas=2.1.4
+scikit-learn=1.3.2
+nltk=3.8.1

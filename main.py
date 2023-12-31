@@ -58,7 +58,7 @@ def vector_based_retrieval(query, processed_data):
     similarity_scores = cosine_similarity(query_vector, tfidf_matrix).flatten()
     return similarity_scores
 
-@app.route('/search', methods=['POST'])
+@app.route('/search', methods=['GET'])
 def search():
     data_path = os.path.dirname(os.path.realpath(__file__)) + "/dataset/"
     file_path = data_path + "data.csv"
