@@ -61,7 +61,7 @@ def vector_based_retrieval(query, processed_data):
 @app.route('/search', methods=['POST'])
 def search():
     data_path = os.path.dirname(os.path.realpath(__file__)) + "/dataset/"
-    file_path = data_path + "test.csv"
+    file_path = data_path + "data.csv"
     num_rows = 500
 
     # Load data
