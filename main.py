@@ -6,8 +6,12 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import nltk
+
 
 app = Flask(__name__)
+nltk.download('stopwords')
+nltk.download('punkt')
 
 # Load data from CSV file
 def load_data(file_path, num_rows=500):
