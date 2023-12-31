@@ -16,7 +16,7 @@ nltk.download('punkt')
 # Load data from CSV file
 def load_data(file_path, num_rows=500):
     df = pd.read_csv(file_path, nrows=num_rows)
-    return df['article'].tolist()
+    return df[['id', 'article', 'highlights']].to_dict('records')
 
 # Preprocess data (tokenization, stop-word removal, and stemming)
 def preprocess_data(data):
@@ -65,20 +65,20 @@ def vector_based_retrieval(query, processed_data):
 @app.route('/search', methods=['GET'])
 def search():
     data_path = os.path.dirname(os.path.realpath(__file__)) + "/dataset/"
-    file_path = data_path + "data.csv"
+    file_path = data_path + "test.csv"
     num_rows = 500
 
     # Load data
     data = load_data(file_path, num_rows)
 
     # Preprocess data
-    processed_data = preprocess_data(data)
+    processed_data = preprocess_data([d['article'] for d in data])
 
-    # Indexing
+    # Indexing with document numbers
     index = create_index(processed_data)
 
-    # Get query from the request
-    user_query = request.json['query']
+    # Get query from the URL parameter
+    user_query = request.args.get('query')
 
     # Stemming on the query
     user_query = " ".join([PorterStemmer().stem(word) for word in word_tokenize(user_query.lower())])
@@ -89,9 +89,16 @@ def search():
     # Vector-based Retrieval using TF-IDF
     tfidf_scores = vector_based_retrieval(user_query, processed_data)
 
-    # Combine results and scores
-    results = [{"document": data[i], "score": tfidf_scores[i]} for i in boolean_results]
-
+    # Combine results, scores, and document count
+    results = [
+        {
+            "id": data[i]['id'],
+            "document_number": i + 1,  # Add 1 to start counting from 1
+            "highlights": data[i]['highlights'],
+            "score": tfidf_scores[i]
+        }
+        for i in boolean_results
+    ]
     return jsonify(results)
 
 if __name__ == '__main__':
