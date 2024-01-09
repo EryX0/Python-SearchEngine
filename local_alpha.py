@@ -1,5 +1,3 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import pandas as pd
 import os
 from nltk.tokenize import word_tokenize
@@ -7,8 +5,6 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import nltk
-import string
 
 
 def load_data(file_path, num_rows=500):
