@@ -12,6 +12,7 @@ BOT_NAME = "WebCrawler"
 SPIDER_MODULES = ["WebCrawler.spiders"]
 NEWSPIDER_MODULE = "WebCrawler.spiders"
 
+CLOSESPIDER_ITEMCOUNT = 500
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "WebCrawler (+http://www.yourdomain.com)"
