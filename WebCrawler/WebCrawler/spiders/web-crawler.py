@@ -5,7 +5,7 @@ import re
 from unidecode import unidecode
 
 class MyCrawler(scrapy.Spider):
-    name = "quotes"
+    name = "cnn-spider"
     start_urls = ["https://edition.cnn.com","https://edition.cnn.com/world/middle-east","https://edition.cnn.com/style/architecture","https://edition.cnn.com/business/tech"]
     count = 0
     limit = 50  # Set your limit here
