@@ -1,14 +1,10 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import pandas as pd
 import os
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import nltk
-import string
+from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
 
 
 def load_data(file_path, num_rows=500):
@@ -60,11 +56,18 @@ def tfidf_retrieval(query, processed_data):
 
     feature_names = vectorizer.get_feature_names_out()
 
-    query_index = feature_names.tolist().index(query)
+    # get the index of the query terms in the feature names
+    query_indexes = []
+    for query_term in query.split():
+        query_indexes.append(feature_names.tolist().index(query_term))
 
-    # Get the TF-IDF scores for the query in all documents
-    query_scores = vectors[:, query_index].toarray().flatten()
-
+    # sum query indexes scores of each document, and store in query_scores
+    query_scores = []
+    for document in vectors:
+        score = 0
+        for index in query_indexes:
+            score += document[0, index]
+        query_scores.append(score)
 
     ### -----     code below is to see what is the document processed by tf-idf vectorization      ----- ###
 
@@ -85,13 +88,13 @@ def tfidf_retrieval(query, processed_data):
     return query_scores
 
 def vector_based_retrieval(query, processed_data):
-
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(processed_data)
+    vectorizer = TfidfVectorizer(max_df=1.0,min_df=0.0)
+    vectors = vectorizer.fit_transform(processed_data)
     query_vector = vectorizer.transform([query])
+    #vsm retrieval with cosine similarity
+    similarity_score = cosine_similarity(query_vector, vectors)
 
-    similarity_scores = cosine_similarity(query_vector, tfidf_matrix).flatten()
-    return similarity_scores
+    return similarity_score
     
 
 def search():
@@ -110,7 +113,7 @@ def search():
 
     # Get query from the URL parameter
     #user_query = request.args.get('query')
-    user_query = "jesus"
+    user_query = "jesus god"
 
     # Stemming on the query
     user_query = " ".join([PorterStemmer().stem(word) for word in word_tokenize(user_query.lower())])
@@ -129,14 +132,15 @@ def search():
         {
             "id": data[i]['id'],
             "document_number": i + 1,  # Add 1 to start counting from 1
-            "highlights": data[i]['highlights'],
             "tfidf_score": tfidf_scores[i],
-            "vsm_score": vsm_scores[i],
+            "vsm_score": vsm_scores[0][i],
+            "highlights": data[i]['highlights'],
             "article": data[i]['article']
         }
         for i in boolean_results
     ]
-    return results
+    #print results sorte by vsm score
+    print(sorted(results, key=lambda k: k['vsm_score'], reverse=True))
     
 if __name__ == '__main__':
     search()
