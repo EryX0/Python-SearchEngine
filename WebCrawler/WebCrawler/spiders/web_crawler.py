@@ -16,10 +16,9 @@ class MyCrawler(scrapy.Spider):
     def parse_link(self,response):
         
         link = response.meta.get('link')
-        title = (''.join([text.strip() for text in response.css('div.headline__wrapper ::text').extract() if text.strip()])).encode('ascii', 'ignore').decode('ascii')
-        #article = (''.join([text.strip() for text in response.css('div.article__content ::text').extract() if text.strip()])).encode('ascii', 'ignore').decode('ascii')
+        title = ' '.join([unidecode(text.strip()) for text in response.css('div.headline__wrapper ::text').extract() if text.strip()])
         article = ' '.join([unidecode(text.strip()) for text in response.css('div.article__content ::text').extract() if text.strip()])
-        article = re.sub(r"(?i)CNN", "", article)
+        # article = re.sub(r"(?i)CNN", "", article)
 
         if not article.strip():
             self.log(f"Skipped {link} - Empty article")
@@ -28,8 +27,8 @@ class MyCrawler(scrapy.Spider):
 
         yield {
             'link': link,
-            'title': title,
-            'article': article
+            'article': article,
+            'title': title
         }
 
 
