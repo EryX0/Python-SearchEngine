@@ -52,9 +52,14 @@ def boolean_retrieval(query, index, processed_data):
     query_terms = set(word_tokenize(query.lower()))
     result_set = set(range(len(processed_data)))
 
+    flag = False
     for term in query_terms:
         if term in index:
+            flag = True 
             result_set = result_set.intersection(index[term])
+
+    if flag == False:
+        result_set = set()
 
     return result_set
 
@@ -68,7 +73,13 @@ def tfidf_retrieval(query, processed_data):
     # get the index of the query terms in the feature names
     query_indexes = []
     for query_term in query.split():
-        query_indexes.append(feature_names.tolist().index(query_term))
+        try:
+            query_indexes.append(feature_names.tolist().index(query_term))
+        except:
+            continue
+    #return all zero if query indexes is empty
+    if len(query_indexes) == 0:
+        return [0] * len(processed_data)
 
     # sum query indexes scores of each document, and store in query_scores
     query_scores = []
@@ -121,17 +132,17 @@ def search():
     vsm_scores = vector_based_retrieval(user_query, processed_data)
 
     # Combine results, scores, and document count
-    results = [
-        {
+    results = []
+    for i in boolean_results:
+        results.append({
             "id": data[i]['id'],
             "document_number": i + 1,  # Add 1 to start counting from 1
             "tfidf_score": tfidf_scores[i],
             "vsm_score": vsm_scores[0][i],
             "highlights": data[i]['highlights'],
             "article": data[i]['article']
-        }
-        for i in boolean_results
-    ]
+        })
+
     return jsonify(results)
 
 if __name__ == '__main__':
