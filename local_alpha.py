@@ -69,9 +69,6 @@ def tfidf_retrieval(query, processed_data):
             score += document[0, index]
         query_scores.append(score)
 
-    
-
-
     ### -----     code below is to see what is the document processed by tf-idf vectorization      ----- ###
 
     # dense = vectors.todense()
