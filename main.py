@@ -106,8 +106,7 @@ def search():
     index = create_index(processed_data)
 
     # Get query from the URL parameter
-    #user_query = request.args.get('query')
-    user_query = "jesus god"
+    user_query = request.args.get('query')
 
     # Stemming on the query
     user_query = " ".join([PorterStemmer().stem(word) for word in word_tokenize(user_query.lower())])
