@@ -49,14 +49,16 @@ def create_index(processed_data):
 
 # Boolean Retrieval
 def boolean_retrieval(query, index, processed_data):
-    query_terms = set(word_tokenize(query.lower()))
-    result_set = set(range(len(processed_data)))
+    query_terms = set(query.split())
+    result_set = set()
 
+    # at least one query term should be in the returned document
     flag = False
     for term in query_terms:
+
         if term in index:
-            flag = True 
-            result_set = result_set.intersection(index[term])
+            flag = True
+            result_set = result_set.union(index[term])
 
     if flag == False:
         result_set = set()
@@ -134,14 +136,15 @@ def search():
     # Combine results, scores, and document count
     results = []
     for i in boolean_results:
-        results.append({
-            "id": data[i]['id'],
-            "document_number": i + 1,  # Add 1 to start counting from 1
-            "tfidf_score": tfidf_scores[i],
-            "vsm_score": vsm_scores[0][i],
-            "highlights": data[i]['highlights'],
-            "article": data[i]['article']
-        })
+        if tfidf_scores[i] > 0 or vsm_scores[0][i] > 0:
+            results.append({
+                "id": data[i]['id'],
+                "document_number": i + 1,  # Add 1 to start counting from 1
+                "tfidf_score": tfidf_scores[i],
+                "vsm_score": vsm_scores[0][i],
+                "highlights": data[i]['highlights'],
+                "article": data[i]['article']
+            })
 
     return jsonify(results)
 
