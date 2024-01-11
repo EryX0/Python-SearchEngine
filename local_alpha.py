@@ -1,15 +1,51 @@
 import pandas as pd
 import os
+import argparse
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+from WebCrawler.WebCrawler.spiders.web_crawler import MyCrawler
+
+
+
+
+def crawler():
+    parser = argparse.ArgumentParser(
+        description='Python Search Engine - Crawler'
+    )
+    parser.add_argument('--limit','-l', type=int, default=500, help='Crawl limit')
+    parser.add_argument('--log','-g', action='store_true' , default=False, help='Enable logging')
+    parser.add_argument('--crawl','-c', action='store_true' ,  default=False, help='getting new data')
+    args = parser.parse_args()
+
+    custom_settings = {
+        'FEED_FORMAT': 'csv',  # Replace with the desired data format
+        'FEED_URI': './dataset/data.csv',  # Replace with the desired data file
+        'LOG_ENABLED': args.log,  # Disable logging
+        'CLOSESPIDER_ITEMCOUNT': args.limit  # Crawl limit
+    }
+    settings = get_project_settings()
+    settings.update(custom_settings)
+    process = CrawlerProcess(settings)
+    process.crawl(MyCrawler)
+    if args.crawl:
+        if os.path.isfile('./dataset/data.csv'):
+            os.remove('./dataset/data.csv')
+            print("getting new data...")
+            process.start()
+        else:
+            print("getting new data...")
+            process.start()
+        print("Crawling complete!")
 
 
 def load_data(file_path, num_rows=500):
     df = pd.read_csv(file_path, nrows=num_rows)
-    return df[['id', 'article', 'highlights']].to_dict('records')
+    return df[['link', 'article', 'title']].to_dict('records')
 
 # Preprocess data (tokenization, stop-word removal, and stemming)
 def preprocess_data(data):
@@ -39,12 +75,19 @@ def create_index(processed_data):
 
 # Boolean Retrieval
 def boolean_retrieval(query, index, processed_data):
-    query_terms = set(word_tokenize(query.lower()))
+    
+    query_terms = query.split()
+
     result_set = set(range(len(processed_data)))
 
+    flag = False
     for term in query_terms:
         if term in index:
-            result_set = result_set.intersection(index[term])
+            flag = True 
+            result_set = result_set.union(index[term])
+
+    if flag == False:
+        result_set = set()
 
     return result_set
 
@@ -59,7 +102,13 @@ def tfidf_retrieval(query, processed_data):
     # get the index of the query terms in the feature names
     query_indexes = []
     for query_term in query.split():
-        query_indexes.append(feature_names.tolist().index(query_term))
+        try:
+            query_indexes.append(feature_names.tolist().index(query_term))
+        except:
+            continue
+    #return all zero if query indexes is empty
+    if len(query_indexes) == 0:
+        return [0] * len(processed_data)
 
     # sum query indexes scores of each document, and store in query_scores
     query_scores = []
@@ -69,23 +118,8 @@ def tfidf_retrieval(query, processed_data):
             score += document[0, index]
         query_scores.append(score)
 
-    ### -----     code below is to see what is the document processed by tf-idf vectorization      ----- ###
-
-    # dense = vectors.todense()
-    # dense_list = dense.tolist()
-
-    # all_keywords = []
-
-    # for description in dense_list:
-    #     x=0
-    #     keywords = []
-    #     for word in description:
-    #         if word > 0:
-    #             keywords.append((feature_names[x]))
-    #         x+=1
-    #     all_keywords.append(keywords)
-
     return query_scores
+
 
 def vector_based_retrieval(query, processed_data):
     vectorizer = TfidfVectorizer(max_df=1.0,min_df=0.0)
@@ -113,7 +147,8 @@ def search():
 
     # Get query from the URL parameter
     #user_query = request.args.get('query')
-    user_query = "jesus god"
+    #user_query = "jesus god"
+    user_query = input("type query: ")
 
     # Stemming on the query
     user_query = " ".join([PorterStemmer().stem(word) for word in word_tokenize(user_query.lower())])
@@ -130,11 +165,11 @@ def search():
     # Combine results, scores, and document count
     results = [
         {
-            "id": data[i]['id'],
+            "link": data[i]['link'],
             "document_number": i + 1,  # Add 1 to start counting from 1
             "tfidf_score": tfidf_scores[i],
             "vsm_score": vsm_scores[0][i],
-            "highlights": data[i]['highlights'],
+            "title": data[i]['title'],
             "article": data[i]['article']
         }
         for i in boolean_results
@@ -143,4 +178,7 @@ def search():
     print(sorted(results, key=lambda k: k['vsm_score'], reverse=True))
     
 if __name__ == '__main__':
+    crawler()
     search()
+    
+    
