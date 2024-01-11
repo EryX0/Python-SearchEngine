@@ -1,7 +1,7 @@
 import scrapy
 from urllib.parse import urljoin
 from scrapy.exceptions import CloseSpider
-import re
+#import re
 from unidecode import unidecode
 
 class MyCrawler(scrapy.Spider):
