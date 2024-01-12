@@ -8,6 +8,10 @@ from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
+import argparse
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+from WebCrawler.WebCrawler.spiders.web_crawler import MyCrawler
 
 
 app = Flask(__name__)
@@ -16,10 +20,39 @@ CORS(app)
 nltk.download('stopwords')
 nltk.download('punkt')
 
+def crawler():
+    parser = argparse.ArgumentParser(
+        description='Python Search Engine - Crawler'
+    )
+    parser.add_argument('--limit','-l', type=int, default=500, help='Crawl limit')
+    parser.add_argument('--log','-g', action='store_true' , default=False, help='Enable logging')
+    parser.add_argument('--crawl','-c', action='store_true' ,  default=False, help='getting new data')
+    args = parser.parse_args()
+
+    custom_settings = {
+        'FEED_FORMAT': 'csv',  # Replace with the desired data format
+        'FEED_URI': './dataset/data.csv',  # Replace with the desired data file
+        'LOG_ENABLED': args.log,  # Disable logging
+        'CLOSESPIDER_ITEMCOUNT': args.limit  # Crawl limit
+    }
+    settings = get_project_settings()
+    settings.update(custom_settings)
+    process = CrawlerProcess(settings)
+    process.crawl(MyCrawler)
+    if args.crawl:
+        if os.path.isfile('./dataset/data.csv'):
+            os.remove('./dataset/data.csv')
+            print("getting new data...")
+            process.start()
+        else:
+            print("getting new data...")
+            process.start()
+        print("Crawling complete!")
+
 # Load data from CSV file
 def load_data(file_path, num_rows=500):
     df = pd.read_csv(file_path, nrows=num_rows)
-    return df[['id', 'article', 'highlights']].to_dict('records')
+    return df[['link', 'article', 'title']].to_dict('records')
 
 # Preprocess data (tokenization, stop-word removal, and stemming)
 def preprocess_data(data):
@@ -120,7 +153,6 @@ def search():
 
     # Get query from the URL parameter
     user_query = request.args.get('query')
-
     # Stemming on the query
     user_query = " ".join([PorterStemmer().stem(word) for word in word_tokenize(user_query.lower())])
 
@@ -138,15 +170,16 @@ def search():
     for i in boolean_results:
         if tfidf_scores[i] > 0 or vsm_scores[0][i] > 0:
             results.append({
-                "id": data[i]['id'],
+                "link": data[i]['link'],
                 "document_number": i + 1,  # Add 1 to start counting from 1
                 "tfidf_score": tfidf_scores[i],
                 "vsm_score": vsm_scores[0][i],
-                "highlights": data[i]['highlights'],
+                "title": data[i]['title'],
                 "article": data[i]['article']
             })
 
     return jsonify(results)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    crawler()
+    app.run(host='0.0.0.0', port=5000, debug=False)
