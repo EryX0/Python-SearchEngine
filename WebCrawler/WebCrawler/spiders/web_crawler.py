@@ -17,8 +17,9 @@ class MyCrawler(scrapy.Spider):
         
         link = response.meta.get('link')
         title = ' '.join([unidecode(text.strip()) for text in response.css('div.headline__wrapper ::text').extract() if text.strip()])
-        article = ' '.join([unidecode(text.strip()) for text in response.css('div.article__content ::text').extract() if text.strip()])
-        # article = re.sub(r"(?i)CNN", "", article)
+        #article = ' '.join([unidecode(text.strip()) for text in response.css('div.article__content ::text').extract() if text.strip()])
+        paragraphs = response.css('div.article__content .paragraph.inline-placeholder, div.article__content .subheader , div.article__content .source__text')
+        article = ' '.join([unidecode(para.css('::text').get().strip()) for para in paragraphs if para.css('::text').get()])
 
         if not article.strip():
             self.log(f"Skipped {link} - Empty article")
