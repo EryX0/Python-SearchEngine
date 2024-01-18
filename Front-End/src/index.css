@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 13px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0e0719;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4E515A;
+  border-radius: 5px;
+}
+
+body {
+  background: linear-gradient(to bottom, #0e0719, #100c23, #181c49);
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
