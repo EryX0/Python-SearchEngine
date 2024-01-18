@@ -29,7 +29,8 @@ def crawler():
         'FEED_FORMAT': 'csv',  # Replace with the desired data format
         'FEED_URI': './dataset/data.csv',  # Replace with the desired data file
         'LOG_ENABLED': args.log,  # Disable logging
-        'CLOSESPIDER_ITEMCOUNT': args.limit  # Crawl limit
+        'CLOSESPIDER_ITEMCOUNT': args.limit,  # Crawl limit
+        'ROBOTSTXT_OBEY': 'True'
     }
     settings = get_project_settings()
     settings.update(custom_settings)
