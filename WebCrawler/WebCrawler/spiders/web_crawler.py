@@ -1,12 +1,12 @@
 import scrapy
 from urllib.parse import urljoin
 from scrapy.exceptions import CloseSpider
-#import re
 from unidecode import unidecode
 
 class MyCrawler(scrapy.Spider):
     name = "cnn-spider"
     start_urls = ["https://edition.cnn.com","https://edition.cnn.com/world/middle-east","https://edition.cnn.com/style/architecture","https://edition.cnn.com/business/tech"]
+    previous_titles = set()
 
     def parse(self, response):
         for related_content in response.xpath('//div[contains(@class, "card container__item")]'):
@@ -17,10 +17,16 @@ class MyCrawler(scrapy.Spider):
         
         link = response.meta.get('link')
         title = ' '.join([unidecode(text.strip()) for text in response.css('div.headline__wrapper ::text').extract() if text.strip()])
-        #article = ' '.join([unidecode(text.strip()) for text in response.css('div.article__content ::text').extract() if text.strip()])
         paragraphs = response.css('div.article__content .paragraph.inline-placeholder, div.article__content .subheader , div.article__content .source__text')
         article = ' '.join([unidecode(para.css('::text').get().strip()) for para in paragraphs if para.css('::text').get()])
 
+        if title in self.previous_titles:
+            self.log(f"Skipped {link} - Duplicate title")
+            return
+
+        self.previous_titles.add(title) 
+
+        
         if not article.strip():
             self.log(f"Skipped {link} - Empty article")
             return
