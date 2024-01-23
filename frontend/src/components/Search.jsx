@@ -17,7 +17,7 @@ const Search = ({ setData, data, setLoading }) => {
       setData(null);
       setLoading(true);
       const { data } = await axios.get(
-        `http://185.81.97.49:5000/search?query=${value}`,
+        `http://localhost:5000/search?query=${value}`,
         { headers: { "Content-Type": "application/json" } }
       );
 

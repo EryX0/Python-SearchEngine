@@ -12,6 +12,9 @@ import argparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from WebCrawler.WebCrawler.spiders.web_crawler import MyCrawler
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer
 
 
 app = Flask(__name__)
@@ -33,7 +36,8 @@ def crawler():
         'FEED_FORMAT': 'csv',  # Replace with the desired data format
         'FEED_URI': './dataset/data.csv',  # Replace with the desired data file
         'LOG_ENABLED': args.log,  # Disable logging
-        'CLOSESPIDER_ITEMCOUNT': args.limit  # Crawl limit
+        'CLOSESPIDER_ITEMCOUNT': args.limit,  # Crawl limit
+        'ROBOTSTXT_OBEY': 'True'
     }
     settings = get_project_settings()
     settings.update(custom_settings)
@@ -48,6 +52,14 @@ def crawler():
             print("getting new data...")
             process.start()
         print("Crawling complete!")
+
+def summarizer(documents, num_sentences=1):
+    parser = PlaintextParser.from_string(documents, Tokenizer("english"))
+    summarizer = LsaSummarizer()
+    summary = summarizer(parser.document, num_sentences)
+    summary =  " ".join(str(sentence) for sentence in summary)
+    return summary
+
 
 # Load data from CSV file
 def load_data(file_path, num_rows=500):
@@ -175,7 +187,8 @@ def search():
                 "tfidf_score": tfidf_scores[i],
                 "vsm_score": vsm_scores[0][i],
                 "title": data[i]['title'],
-                "article": data[i]['article']
+                "article": data[i]['article'],
+                "highlight": summarizer(data[i]['article'], num_sentences=1)
             })
 
     return jsonify(results)

@@ -1,3 +1,4 @@
+
 import { Button, Typography } from "@mui/material";
 
 const ShowContent = ({ item, tfidf, setOpen, setItem }) => {
@@ -13,6 +14,7 @@ const ShowContent = ({ item, tfidf, setOpen, setItem }) => {
       </h1>
 
       <div className="items-center">
+
         <Typography className="text-white text-justify">{item.highlight}</Typography>
         <Button
           style={{ margin: "20px 0 10px" }}
@@ -25,6 +27,7 @@ const ShowContent = ({ item, tfidf, setOpen, setItem }) => {
           }}
         >
           See More
+
         </Button>
       </div>
 
