@@ -1,4 +1,5 @@
-import { Typography } from "@mui/material";
+
+import { Button, Typography } from "@mui/material";
 
 const ShowContent = ({ item, tfidf, setOpen, setItem }) => {
   return (
@@ -13,19 +14,21 @@ const ShowContent = ({ item, tfidf, setOpen, setItem }) => {
       </h1>
 
       <div className="items-center">
-        <Typography className="text-white">
-          {item.article.slice(0, 150)}...
-        </Typography>
-        <Typography
-          mt={2}
-          className="w-[90px] cursor-pointer hover:underline"
+
+        <Typography className="text-white text-justify">{item.highlight}</Typography>
+        <Button
+          style={{ margin: "20px 0 10px" }}
+          variant="contained"
+          color="secondary"
+          fullWidth
           onClick={() => {
             setItem(item);
             setOpen(true);
           }}
         >
           See More
-        </Typography>
+
+        </Button>
       </div>
 
       <hr className="my-4" />
