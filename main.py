@@ -150,18 +150,9 @@ def vector_based_retrieval(query, processed_data):
 
 @app.route('/search', methods=['GET'])
 def search():
-    data_path = os.path.dirname(os.path.realpath(__file__)) + "/dataset/"
-    file_path = data_path + "data.csv"
-    num_rows = 500
-
-    # Load data
-    data = load_data(file_path, num_rows)
-
-    # Preprocess data
-    processed_data = preprocess_data([d['article'] for d in data])
-
-    # Indexing with document numbers
-    index = create_index(processed_data)
+    # #benchmarking speed
+    # import time
+    # start = time.time()
 
     # Get query from the URL parameter
     user_query = request.args.get('query')
@@ -191,8 +182,28 @@ def search():
                 "highlight": summarizer(data[i]['article'], num_sentences=1)
             })
 
+    # #end benchmarking speed
+    # end = time.time()
+    # print("total time: ", end-start)
+            
     return jsonify(results)
 
 if __name__ == '__main__':
     crawler()
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    #make global data
+    global data
+    data_path = os.path.dirname(os.path.realpath(__file__)) + "/dataset/"
+    file_path = data_path + "data.csv"
+    num_rows = 500
+
+    # Load data
+    data = load_data(file_path, num_rows)
+
+    # only preprocess once
+    global processed_data
+    processed_data = preprocess_data([d['article'] for d in data])
+
+    global index
+    index = create_index(processed_data)
+    
+    app.run(debug=True, port=5000, host='0.0.0.0')
