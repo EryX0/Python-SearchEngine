@@ -110,12 +110,13 @@ def boolean_retrieval(query, index, processed_data):
 
     return result_set
 
-def tfidf_retrieval(query, processed_data):
-
+def tfidf_calculator(processed_data):
     vectorizer = TfidfVectorizer(max_df=1.0,min_df=0.0)
     vectors = vectorizer.fit_transform(processed_data)
-
     feature_names = vectorizer.get_feature_names_out()
+    return vectors, feature_names, vectorizer
+
+def tfidf_retrieval(query, processed_data):
 
     # get the index of the query terms in the feature names
     query_indexes = []
@@ -130,7 +131,7 @@ def tfidf_retrieval(query, processed_data):
 
     # sum query indexes scores of each document, and store in query_scores
     query_scores = []
-    for document in vectors:
+    for document in tfidf_vector:
         score = 0
         for index in query_indexes:
             score += document[0, index]
@@ -139,20 +140,19 @@ def tfidf_retrieval(query, processed_data):
     return query_scores
 
 # Vector-based Retrieval using TF-IDF
-def vector_based_retrieval(query, processed_data):
-    vectorizer = TfidfVectorizer(max_df=1.0,min_df=0.0)
-    vectors = vectorizer.fit_transform(processed_data)
-    query_vector = vectorizer.transform([query])
+def vector_based_retrieval(query):
+    
+    query_vector = vectorizerObj.transform([query])
     #vsm retrieval with cosine similarity
-    similarity_score = cosine_similarity(query_vector, vectors)
+    similarity_score = cosine_similarity(query_vector, tfidf_vector)
 
     return similarity_score
 
 @app.route('/search', methods=['GET'])
 def search():
-    # #benchmarking speed
-    # import time
-    # start = time.time()
+    #benchmarking speed
+    import time
+    start = time.time()
 
     # Get query from the URL parameter
     user_query = request.args.get('query')
@@ -166,7 +166,7 @@ def search():
     tfidf_scores = tfidf_retrieval(user_query, processed_data)
 
     #vsm retrieval function calling here.
-    vsm_scores = vector_based_retrieval(user_query, processed_data)
+    vsm_scores = vector_based_retrieval(user_query)
 
     # Combine results, scores, and document count
     results = []
@@ -182,10 +182,10 @@ def search():
                 "highlight": summarizer(data[i]['article'], num_sentences=1)
             })
 
-    # #end benchmarking speed
-    # end = time.time()
-    # print("total time: ", end-start)
-            
+    #end benchmarking speed
+    end = time.time()
+    print("total time: ", end-start)
+
     return jsonify(results)
 
 if __name__ == '__main__':
@@ -205,5 +205,8 @@ if __name__ == '__main__':
 
     global index
     index = create_index(processed_data)
+
+    global tfidf_vector , feature_names, vectorizerObj
+    tfidf_vector, feature_names, vectorizerObj = tfidf_calculator(processed_data)
     
     app.run(debug=True, port=5000, host='0.0.0.0')
